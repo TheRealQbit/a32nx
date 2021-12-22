@@ -10,6 +10,7 @@ import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { IFLeg } from '@fmgc/guidance/lnav/legs/IF';
 import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
 import { TurnDirection } from '@fmgc/types/fstypes/FSEnums';
+import { Transition } from '@fmgc/guidance/lnav/Transition';
 import { PathVector, PathVectorType } from '../PathVector';
 
 export class CILeg extends Leg {
@@ -58,7 +59,7 @@ export class CILeg extends Leg {
     }
 
     getPathEndPoint(): Coordinates | undefined {
-        if (this.outboundGuidable && this.outboundGuidable.isComputed) {
+        if (this.outboundGuidable && this.outboundGuidable instanceof Transition && this.outboundGuidable.isComputed) {
             return this.outboundGuidable.getPathStartPoint();
         }
 
