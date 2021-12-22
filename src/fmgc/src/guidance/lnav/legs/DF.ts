@@ -42,10 +42,6 @@ export class DFLeg extends XFLeg {
         return this.computedPath;
     }
 
-    private inboundGuidable: Guidable | undefined;
-
-    private outboundGuidable: Guidable | undefined;
-
     private start: Coordinates | undefined;
 
     private estimateStartPoint(): Coordinates {

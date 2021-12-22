@@ -6,7 +6,6 @@ import { GuidanceParameters } from '@fmgc/guidance/ControlLaws';
 import { courseToFixDistanceToGo, courseToFixGuidance } from '@fmgc/guidance/lnav/CommonGeometry';
 import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
 import { LnavConfig } from '@fmgc/guidance/LnavConfig';
-import { FixedRadiusTransition } from '@fmgc/guidance/lnav/transitions/FixedRadiusTransition';
 import { PathVector, PathVectorType } from '../PathVector';
 
 export class CFLeg extends XFLeg {
@@ -23,10 +22,6 @@ export class CFLeg extends XFLeg {
         this.segment = segment;
         this.indexInFullPath = indexInFullPath;
     }
-
-    private inboundGuidable: Guidable | undefined;
-
-    private outboundGuidable: Guidable | undefined;
 
     getPathStartPoint(): Coordinates | undefined {
         if (this.inboundGuidable) {
@@ -46,14 +41,6 @@ export class CFLeg extends XFLeg {
             this.fix.infos.coordinates.lat,
             this.fix.infos.coordinates.long,
         );
-    }
-
-    getPathEndPoint(): Coordinates | undefined {
-        if (this.outboundGuidable instanceof FixedRadiusTransition && this.outboundGuidable.isComputed) {
-            return this.outboundGuidable.getPathStartPoint();
-        }
-
-        return this.fix.infos.coordinates;
     }
 
     get predictedPath(): PathVector[] {

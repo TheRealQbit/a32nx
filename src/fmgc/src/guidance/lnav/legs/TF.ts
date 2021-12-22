@@ -9,14 +9,12 @@ import {
 import { SegmentType } from '@fmgc/wtsdk';
 import { WaypointConstraintType } from '@fmgc/flightplanning/FlightPlanManager';
 import { Coordinates } from '@fmgc/flightplanning/data/geo';
-import { FixedRadiusTransition } from '@fmgc/guidance/lnav/transitions/FixedRadiusTransition';
 import { Guidable } from '@fmgc/guidance/Guidable';
 import { Constants } from '@shared/Constants';
 import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
 import { Geo } from '@fmgc/utils/Geo';
 import { courseToFixDistanceToGo, courseToFixGuidance } from '@fmgc/guidance/lnav/CommonGeometry';
 import { LnavConfig } from '@fmgc/guidance/LnavConfig';
-import { TurnDirection } from '@fmgc/types/fstypes/FSEnums';
 import { PathVector, PathVectorType } from '../PathVector';
 
 export class TFLeg extends XFLeg {
@@ -49,10 +47,6 @@ export class TFLeg extends XFLeg {
         );
     }
 
-    private previousGudiable: Guidable;
-
-    private nextGuidable: Guidable;
-
     get inboundCourse(): DegreesTrue {
         return Geo.getGreatCircleBearing(this.from.infos.coordinates, this.to.infos.coordinates);
     }
@@ -66,20 +60,12 @@ export class TFLeg extends XFLeg {
     }
 
     getPathStartPoint(): Coordinates | undefined {
-        return this.previousGudiable?.isComputed ? this.previousGudiable.getPathEndPoint() : this.from.infos.coordinates;
-    }
-
-    getPathEndPoint(): Coordinates | undefined {
-        if (this.nextGuidable?.isComputed && this.nextGuidable instanceof FixedRadiusTransition && !this.nextGuidable.isReverted) {
-            return this.nextGuidable.getTurningPoints()[0];
-        }
-
-        return this.to.infos.coordinates;
+        return this.inboundGuidable?.isComputed ? this.inboundGuidable.getPathEndPoint() : this.from.infos.coordinates;
     }
 
     recomputeWithParameters(_isActive: boolean, _tas: Knots, _gs: Knots, _ppos: Coordinates, _trueTrack: DegreesTrue, previousGuidable: Guidable, nextGuidable: Guidable) {
-        this.previousGudiable = previousGuidable;
-        this.nextGuidable = nextGuidable;
+        this.inboundGuidable = previousGuidable;
+        this.outboundGuidable = nextGuidable;
 
         const startPoint = this.getPathStartPoint();
         const endPoint = this.getPathEndPoint();
