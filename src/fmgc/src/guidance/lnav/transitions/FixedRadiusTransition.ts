@@ -96,8 +96,8 @@ export class FixedRadiusTransition extends Transition {
         this.radius = (tas ** 2 / (9.81 * Math.tan(finalBankAngle * Avionics.Utils.DEG2RAD))) / 6997.84;
 
         const defaultTurnDirection = this.sweepAngle >= 0 ? TurnDirection.Right : TurnDirection.Left;
-        const forcedTurn = (this.previousLeg.constrainedTurnDirection === TurnDirection.Left || this.previousLeg.constrainedTurnDirection === TurnDirection.Right)
-            && defaultTurnDirection !== this.previousLeg.constrainedTurnDirection;
+        const forcedTurn = (this.nextLeg.constrainedTurnDirection === TurnDirection.Left || this.nextLeg.constrainedTurnDirection === TurnDirection.Right)
+            && defaultTurnDirection !== this.nextLeg.constrainedTurnDirection;
         const requiredTurnDistance = this.radius * Math.tan(Math.abs(this.sweepAngle)) + 0.1;
         const tooBig = this.previousLeg.distanceToTermFix < requiredTurnDistance;
         // in some circumstances we revert to a path capture transition where the fixed radius won't work well
