@@ -13,6 +13,7 @@ import { arcDistanceToGo, arcGuidance, courseToFixDistanceToGo, courseToFixGuida
 import { AltitudeConstraint, getAltitudeConstraintFromWaypoint, getSpeedConstraintFromWaypoint, SpeedConstraint } from '@fmgc/guidance/lnav/legs/index';
 import { Guidable } from '@fmgc/guidance/Guidable';
 import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
+import { LnavConfig } from '@fmgc/guidance/LnavConfig';
 import { PathVector, PathVectorType } from '../PathVector';
 
 interface HxGeometry {
@@ -175,7 +176,7 @@ export class HMLeg extends XFLeg {
     get radius(): NauticalMiles {
         // TODO account for wind
         const gsMs = this.targetSpeed() / 1.94384;
-        const radius = gsMs ** 2 / (9.81 * Math.tan(maxBank(this.targetSpeed(), true) * Math.PI / 180)) / 1852;
+        const radius = (gsMs ** 2 / (9.81 * Math.tan(maxBank(this.targetSpeed(), true) * Math.PI / 180)) / 1852) * LnavConfig.TURN_RADIUS_FACTOR;
 
         return radius;
     }

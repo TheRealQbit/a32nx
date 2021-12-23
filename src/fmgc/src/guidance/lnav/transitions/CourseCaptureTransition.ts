@@ -13,6 +13,7 @@ import { Geo } from '@fmgc/utils/Geo';
 import { PathVector, PathVectorType } from '@fmgc/guidance/lnav/PathVector';
 import { Guidable } from '@fmgc/guidance/Guidable';
 import { TurnDirection } from '@fmgc/types/fstypes/FSEnums';
+import { LnavConfig } from '@fmgc/guidance/LnavConfig';
 import { arcDistanceToGo, maxBank } from '../CommonGeometry';
 import { CFLeg } from '../legs/CF';
 import { CRLeg } from '../legs/CR';
@@ -94,7 +95,7 @@ export class CourseCaptureTransition extends Transition {
         }
 
         // Course change and delta track?
-        const radius = (gs ** 2 / (Constants.G * tan(Math.abs(maxBank(tas, false))))) / 6997.84;
+        const radius = ((gs ** 2 / (Constants.G * tan(Math.abs(maxBank(tas, false))))) / 6997.84) * LnavConfig.TURN_RADIUS_FACTOR;
         const turnCenter = Geo.computeDestinationPoint(initialTurningPoint, radius, this.previousLeg.outboundCourse + 90 * Math.sign(courseChange));
         const finalTurningPoint = Geo.computeDestinationPoint(turnCenter, radius, this.previousLeg.outboundCourse - 90 * Math.sign(courseChange) + courseChange);
 

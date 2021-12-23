@@ -8,6 +8,11 @@ export const LnavConfig = {
     DEFAULT_MIN_PREDICTED_TAS: 160,
 
     /**
+     * Coefficient applied to all transition turn radii
+     */
+    TURN_RADIUS_FACTOR: 1.1,
+
+    /**
      * The number of transitions to compute after the active leg (-1: no limit, compute all transitions)
      */
     NUM_COMPUTED_TRANSITIONS_AFTER_ACTIVE: -1,

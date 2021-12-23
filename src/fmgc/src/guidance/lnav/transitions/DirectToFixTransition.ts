@@ -107,7 +107,7 @@ export class DirectToFixTransition extends Transition {
         // FIXME fix for FX legs
         const nextFix = this.nextLeg.fix.infos.coordinates;
 
-        this.radius = gs ** 2 / (Constants.G * tan(maxBank(tas, true))) / 6997.84;
+        this.radius = (gs ** 2 / (Constants.G * tan(maxBank(tas, true))) / 6997.84) * LnavConfig.TURN_RADIUS_FACTOR;
 
         let trackChange = MathUtils.diffAngle(this.previousLeg.outboundCourse, Geo.getGreatCircleBearing(this.previousLeg.getPathEndPoint(), nextFix), this.nextLeg.constrainedTurnDirection);
         if (Math.abs(trackChange) < 3) {
@@ -119,7 +119,7 @@ export class DirectToFixTransition extends Transition {
 
         const currentRollAngle = 0; // TODO: if active leg, current aircraft roll, else 0
         const rollAngleChange = Math.abs(turnDirectionSign * maxBank(tas, true) - currentRollAngle);
-        const rollAnticipationDistance = Geometry.getRollAnticipationDistance(tas, 0, rollAngleChange);
+        const rollAnticipationDistance = Geometry.getRollAnticipationDistance(gs, 0, rollAngleChange);
 
         const itp = rollAnticipationDistance < 0.05 ? termFix
             : Geo.computeDestinationPoint(termFix, rollAnticipationDistance, this.previousLeg.outboundCourse);
@@ -277,12 +277,7 @@ export class DirectToFixTransition extends Transition {
         return [this.arcStartPoint, this.arcEndPoint];
     }
 
-    /**
-     * Returns the distance to the termination point
-     *
-     * @param _ppos
-     */
-    getDistanceToGo(ppos: LatLongData): NauticalMiles {
+    getDistanceToGo(ppos: Coordinates): NauticalMiles {
         let radDtg = 0;
         if (this.state === DirectToFixTransitionGuidanceState.Rad) {
             radDtg = courseToFixDistanceToGo(ppos, this.straightCourse, this.lineEndPoint);
@@ -335,9 +330,9 @@ export class DirectToFixTransition extends Transition {
         return params;
     }
 
-    getNominalRollAngle(gs: Knots): Degrees {
-        const gsMs = gs * (463 / 900);
-        return (this.clockwise ? 1 : -1) * Math.atan((gsMs ** 2) / (this.radius * 1852 * 9.81)) * (180 / Math.PI);
+    getNominalRollAngle(_gs: Knots): Degrees {
+        // RAD is managed inside here
+        return 0;
     }
 
     get repr(): string {

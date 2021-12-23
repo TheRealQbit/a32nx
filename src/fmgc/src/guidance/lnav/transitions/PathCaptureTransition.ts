@@ -114,7 +114,7 @@ export class PathCaptureTransition extends Transition {
         let turnDirection = Math.sign(deltaTrack);
 
         // Theta variable should be stored based on turn direction and max roll, but it is only used once in an absolute sense, so it is useless
-        const radius = gs ** 2 / (Constants.G * tan(maxBank(tas, true)) * 6997.84);
+        const radius = (gs ** 2 / (Constants.G * tan(maxBank(tas, true)) * 6997.84)) * LnavConfig.TURN_RADIUS_FACTOR;
         const distanceLimit = radius * cos(48);
 
         // TODO: Turn center is slightly off for some reason, fix

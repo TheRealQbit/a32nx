@@ -10,6 +10,7 @@ import { CILeg } from '@fmgc/guidance/lnav/legs/CI';
 import { arcDistanceToGo, arcGuidance, arcLength, maxBank, minBank } from '@fmgc/guidance/lnav/CommonGeometry';
 import { TurnDirection } from '@fmgc/types/fstypes/FSEnums';
 import { Constants } from '@shared/Constants';
+import { LnavConfig } from '@fmgc/guidance/LnavConfig';
 import { PathVector, PathVectorType } from '../PathVector';
 import { CFLeg } from '../legs/CF';
 
@@ -93,7 +94,7 @@ export class FixedRadiusTransition extends Transition {
         const finalBankAngle = Math.max(Math.min(bankAngle, maxBank(tas, true)), minBank(this.nextLeg.segment));
 
         // Turn radius
-        this.radius = (tas ** 2 / (9.81 * Math.tan(finalBankAngle * Avionics.Utils.DEG2RAD))) / 6997.84;
+        this.radius = ((tas ** 2 / (9.81 * Math.tan(finalBankAngle * Avionics.Utils.DEG2RAD))) / 6997.84) * LnavConfig.TURN_RADIUS_FACTOR;
 
         const defaultTurnDirection = this.sweepAngle >= 0 ? TurnDirection.Right : TurnDirection.Left;
         const forcedTurn = (this.nextLeg.constrainedTurnDirection === TurnDirection.Left || this.nextLeg.constrainedTurnDirection === TurnDirection.Right)

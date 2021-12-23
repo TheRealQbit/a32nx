@@ -265,12 +265,9 @@ export class Geometry {
             return 0;
         }
 
-        // convert ground speed to m/s
-        const groundSpeedMeterPerSecond = gs * (463 / 900);
-
         // get nominal phi from previous and next leg
-        const phiNominalFrom = from.isCircularArc ? from.getNominalRollAngle(groundSpeedMeterPerSecond) : 0;
-        const phiNominalTo = to.isCircularArc ? to.getNominalRollAngle(groundSpeedMeterPerSecond) : 0;
+        const phiNominalFrom = from.isCircularArc ? from.getNominalRollAngle(gs) : 0;
+        const phiNominalTo = to.isCircularArc ? to.getNominalRollAngle(gs) : 0;
 
         // TODO consider case where RAD > transition distance
 

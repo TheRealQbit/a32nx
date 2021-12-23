@@ -111,6 +111,14 @@ export class TFLeg extends XFLeg {
         return getAltitudeConstraintFromWaypoint(this.from);
     }
 
+    getPseudoWaypointLocation(distanceBeforeTerminator: NauticalMiles): Coordinates | undefined {
+        return TFLeg.getIntermediatePoint(
+            this.getPathStartPoint(),
+            this.getPathEndPoint(),
+            (this.distance - distanceBeforeTerminator) / this.distance,
+        );
+    }
+
     private static getIntermediatePoint(start: Coordinates, end: Coordinates, fraction: number): Coordinates {
         const Phi1 = start.lat * Avionics.Utils.DEG2RAD;
         const Gamma1 = start.long * Avionics.Utils.DEG2RAD;
