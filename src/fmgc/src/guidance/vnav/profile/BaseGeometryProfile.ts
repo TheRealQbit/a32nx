@@ -3,6 +3,12 @@ import { VnavConfig } from '@fmgc/guidance/vnav/VnavConfig';
 import { PseudoWaypointFlightPlanInfo } from '@fmgc/guidance/PseudoWaypoint';
 import { MaxAltitudeConstraint, MaxSpeedConstraint, VerticalCheckpoint, VerticalCheckpointReason } from '@fmgc/guidance/vnav/profile/NavGeometryProfile';
 
+export interface PerformancePagePrediction {
+    altitude: Feet,
+    distanceFromStart: NauticalMiles,
+    secondsFromPresent: Seconds,
+}
+
 export abstract class BaseGeometryProfile {
     public isReadyToDisplay: boolean = false;
 
@@ -192,5 +198,20 @@ export abstract class BaseGeometryProfile {
         this.checkpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
 
         this.isReadyToDisplay = true;
+    }
+
+    computePredictionToFcuAltitude(fcuAltitude: Feet): PerformancePagePrediction | undefined {
+        if (fcuAltitude < this.checkpoints[0].altitude) {
+            return undefined;
+        }
+
+        const distanceToFcuAltitude = this.interpolateFromCheckpoints(fcuAltitude, (checkpoint) => checkpoint.altitude, (checkpoint) => checkpoint.distanceFromStart);
+        const timeToFcuAltitude = this.interpolateTimeAtDistance(distanceToFcuAltitude);
+
+        return {
+            altitude: fcuAltitude,
+            distanceFromStart: distanceToFcuAltitude,
+            secondsFromPresent: timeToFcuAltitude,
+        };
     }
 }

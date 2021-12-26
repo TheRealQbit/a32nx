@@ -428,6 +428,36 @@ class CDUPerformancePage {
         const isSelected = Simplane.getAutoPilotAirspeedSelected();
         const actModeCell = isSelected ? "SELECTED" : "MANAGED";
         const costIndexCell = isFinite(mcdu.costIndex) ? mcdu.costIndex.toFixed(0) + "[color]cyan" : "[][color]cyan";
+
+        const cruiseAltitude = mcdu.cruiseFlightLevel * 100;
+        const fcuAltitude = SimVar.GetSimVarValue("AUTOPILOT ALTITUDE LOCK VAR:3", "feet");
+        const altitudeToPredict = Math.min(cruiseAltitude, fcuAltitude);
+
+        const predToCell = CDUPerformancePage.formatAltitudeOrLevel(altitudeToPredict, mcdu.flightPlanManager.getOriginTransitionAltitude()) + "[color]cyan";
+
+        let predToDistanceCell = "---";
+        let predToTimeCell = "----";
+
+        if (mcdu.guidanceController.vnavDriver &&
+            mcdu.guidanceController.vnavDriver.currentNavGeometryProfile &&
+            mcdu.guidanceController.vnavDriver.currentNavGeometryProfile.isReadyToDisplay) {
+            const predictions = mcdu.guidanceController.vnavDriver.currentNavGeometryProfile.computePredictionToFcuAltitude(altitudeToPredict);
+
+            if (predictions) {
+                if (isFinite(predictions.distanceFromStart)) {
+                    predToDistanceCell = predictions.distanceFromStart.toFixed(0) + "[color]green";
+                }
+
+                if (isFinite(predictions.secondsFromPresent)) {
+                    const utcTime = SimVar.GetGlobalVarValue("ZULU TIME", "seconds");
+
+                    predToTimeCell = (mcdu.getIsFlying()
+                        ? FMCMainDisplay.secondsToUTC(utcTime + predictions.secondsFromPresent)
+                        : FMCMainDisplay.minutesTohhmm(predictions.secondsFromPresent)) + "[color]green";
+                }
+            }
+        }
+
         let managedSpeedCell = "";
         if (isPhaseActive) {
             if (mcdu.managedSpeedTarget === mcdu.managedSpeedClimb) {
@@ -491,12 +521,12 @@ class CDUPerformancePage {
         };
         mcdu.setTemplate([
             ["CLB[color]" + titleColor],
-            ["ACT MODE", "EFOB", timeLabel],
-            [actModeCell + "[color]green", "6.0[color]green", "----[color]green"],
+            ["ACT MODE"],
+            [actModeCell + "[color]green"],
             ["\xa0CI"],
-            [costIndexCell + "[color]cyan"],
-            ["\xa0MANAGED"],
-            ["\xa0" + managedSpeedCell + "[color]green"],
+            [costIndexCell + "[color]cyan", predToCell, "\xa0\xa0\xa0{small}PRED TO{end}"],
+            ["\xa0MANAGED", "DIST", timeLabel],
+            ["\xa0" + managedSpeedCell + "[color]green", predToDistanceCell, predToTimeCell],
             ["\xa0" + selectedSpeedTitle],
             ["\xa0" + selectedSpeedCell + "[color]cyan"],
             [""],
@@ -1092,6 +1122,13 @@ class CDUPerformancePage {
         } else {
             return ["PRESEL", isFinite(_preSel) ? "" + _preSel : "*[ ]"];
         }
+    }
+    static formatAltitudeOrLevel(altitudeToFormat, transitionAltitude) {
+        if (transitionAltitude >= 100 && altitudeToFormat > transitionAltitude) {
+            return `FL${(altitudeToFormat / 100).toFixed(0).toString().padStart(3,"0")}`;
+        }
+
+        return (10 * Math.round(altitudeToFormat / 10)).toFixed(0).toString().padStart(5,"\xa0");
     }
 }
 CDUPerformancePage._timer = 0;
