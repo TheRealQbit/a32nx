@@ -28,11 +28,38 @@ export class Geo {
     }
 
     static distanceToLeg(from: Coordinates, leg: Leg): NauticalMiles {
-        return Geo.getDistance(from, Geo.doublePlaceBearingIntercept(from, leg.getPathEndPoint(), leg.outboundCourse - 90, leg.outboundCourse - 180));
+        const intersections1 = A32NX_Util.bothGreatCircleIntersections(
+            from,
+            Avionics.Utils.clampAngle(leg.outboundCourse - 90),
+            leg.getPathEndPoint(),
+            Avionics.Utils.clampAngle(leg.outboundCourse - 180),
+        );
+
+        const d1 = Avionics.Utils.computeGreatCircleDistance(from, intersections1[0]);
+        const d2 = Avionics.Utils.computeGreatCircleDistance(from, intersections1[1]);
+
+        // We might call this on legs that do not have a defined start point yet, as it depends on their inbound transition, which is what is passing
+        // them in to this function.
+        // In that case, do not consider the second intersection set.
+        if (!leg.getPathStartPoint()) {
+            return Math.min(d1, d2);
+        }
+
+        const intersections2 = A32NX_Util.bothGreatCircleIntersections(
+            from,
+            Avionics.Utils.clampAngle(leg.outboundCourse - 90),
+            leg.getPathStartPoint(),
+            Avionics.Utils.clampAngle(leg.outboundCourse - 180),
+        );
+
+        const d3 = Avionics.Utils.computeGreatCircleDistance(from, intersections2[0]);
+        const d4 = Avionics.Utils.computeGreatCircleDistance(from, intersections2[1]);
+
+        return Math.min(d1, d2, d3, d4);
     }
 
     static legIntercept(from: Coordinates, bearing: DegreesTrue, leg: Leg): Coordinates {
-        return Geo.doublePlaceBearingIntercept(from, leg.getPathEndPoint(), bearing, leg.outboundCourse - 180);
+        return Geo.doublePlaceBearingIntercept(from, leg.getPathEndPoint(), Avionics.Utils.clampAngle(bearing), Avionics.Utils.clampAngle(leg.outboundCourse - 180));
     }
 
     static placeBearingPlaceDistanceIntercept(bearingPoint: Coordinates, distancePoint: Coordinates, bearing: DegreesTrue, distance: NauticalMiles): Coordinates {
@@ -45,13 +72,15 @@ export class Geo {
     }
 
     static doublePlaceBearingIntercept(pointA: Coordinates, pointB: Coordinates, bearingA: DegreesTrue, bearingB: DegreesTrue): Coordinates {
-        const distanceBetween = Geo.getDistance(pointA, pointB);
-        const bearingBetween = Geo.getGreatCircleBearing(pointA, pointB);
-        const angleA = bearingBetween - bearingA;
-        const angleB = bearingB - bearingBetween - 180;
-        const angleC = 180 - angleA - angleB;
+        return A32NX_Util.greatCircleIntersection(pointA, bearingA, pointB, bearingB);
 
-        const dist = Math.sin(angleA * (Math.PI / 180)) * (distanceBetween / Math.sin(angleC * (Math.PI / 180)));
-        return Geo.computeDestinationPoint(pointB, dist, bearingB);
+        // const distanceBetween = Geo.getDistance(pointA, pointB);
+        // const bearingBetween = Geo.getGreatCircleBearing(pointA, pointB);
+        // const angleA = bearingBetween - bearingA;
+        // const angleB = bearingB - bearingBetween - 180;
+        // const angleC = 180 - angleA - angleB;
+        //
+        // const dist = Math.sin(angleA * (Math.PI / 180)) * (distanceBetween / Math.sin(angleC * (Math.PI / 180)));
+        // return Geo.computeDestinationPoint(pointB, dist, bearingB);
     }
 }
