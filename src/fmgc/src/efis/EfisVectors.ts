@@ -133,7 +133,7 @@ export class EfisVectors {
 
         const length = pathVectorLength(vector);
 
-        return length <= 350;
+        return length <= 5_000;
     }
 
     private transmitGroup(vectors: PathVector[], group: EfisVectorsGroup): void {
