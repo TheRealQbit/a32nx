@@ -11,6 +11,8 @@ import { arcDistanceToGo, arcGuidance, arcLength, maxBank, minBank } from '@fmgc
 import { TurnDirection } from '@fmgc/types/fstypes/FSEnums';
 import { Constants } from '@shared/Constants';
 import { LnavConfig } from '@fmgc/guidance/LnavConfig';
+import { Geo } from '@fmgc/utils/Geo';
+import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
 import { PathVector, PathVectorType } from '../PathVector';
 import { CFLeg } from '../legs/CF';
 
@@ -76,6 +78,8 @@ export class FixedRadiusTransition extends Transition {
         return this.distance < 0.01;
     }
 
+    private legIntercept: Coordinates;
+
     recomputeWithParameters(isActive: boolean, tas: Knots, gs: Knots, ppos: Coordinates, trueTrack: DegreesTrue, previousGuidable: Guidable, nextGuidable: Guidable) {
         if (this.isFrozen) {
             if (DEBUG) {
@@ -83,7 +87,6 @@ export class FixedRadiusTransition extends Transition {
             }
             return;
         }
-
         // Sweep angle
         this.sweepAngle = MathUtils.diffAngle(this.previousLeg.outboundCourse, this.nextLeg.inboundCourse);
 
@@ -96,13 +99,21 @@ export class FixedRadiusTransition extends Transition {
         // Turn radius
         this.radius = ((tas ** 2 / (9.81 * Math.tan(finalBankAngle * Avionics.Utils.DEG2RAD))) / 6997.84) * LnavConfig.TURN_RADIUS_FACTOR;
 
+        // Check what the distance from the fix to the next leg is (to avoid being not lined up in some XF -> CF cases)
+        const prevLegTermDistanceToNextLeg = Geo.distanceToLeg(
+            this.previousLeg instanceof XFLeg ? this.previousLeg.fix.infos.coordinates : this.previousLeg.intercept,
+            this.nextLeg,
+        );
+
         const defaultTurnDirection = this.sweepAngle >= 0 ? TurnDirection.Right : TurnDirection.Left;
         const forcedTurn = (this.nextLeg.constrainedTurnDirection === TurnDirection.Left || this.nextLeg.constrainedTurnDirection === TurnDirection.Right)
             && defaultTurnDirection !== this.nextLeg.constrainedTurnDirection;
         const requiredTurnDistance = this.radius * Math.tan(Math.abs(this.sweepAngle)) + 0.1;
         const tooBig = this.previousLeg.distanceToTermFix < requiredTurnDistance;
+        const notLinedUp = Math.abs(prevLegTermDistanceToNextLeg) >= 0.1; // "reasonable" distance
+
         // in some circumstances we revert to a path capture transition where the fixed radius won't work well
-        if (Math.abs(this.sweepAngle) <= 3 || Math.abs(this.sweepAngle) > 175 || this.previousLeg.overflyTermFix || forcedTurn || tooBig) {
+        if (Math.abs(this.sweepAngle) <= 3 || Math.abs(this.sweepAngle) > 175 || this.previousLeg.overflyTermFix || forcedTurn || tooBig || notLinedUp) {
             if (this.revertTo === undefined) {
                 this.revertTo = new PathCaptureTransition(this.previousLeg, this.nextLeg);
             }
