@@ -44,16 +44,6 @@ export class PseudoWaypoints implements GuidanceComponent {
         const geometry = this.guidanceController.activeGeometry;
         const wptCount = this.guidanceController.flightPlanManager.getWaypointsCount();
 
-        const heading = SimVar.GetSimVarValue('PLANE HEADING DEGREES MAGNETIC', 'degrees');
-        let track = SimVar.GetSimVarValue('GPS GROUND MAGNETIC TRACK', 'degrees');
-        const groundSpeed = SimVar.GetSimVarValue('GPS GROUND SPEED', 'Meters per second');
-        const trueHeading = SimVar.GetSimVarValue('PLANE HEADING DEGREES TRUE', 'degrees');
-
-        // Workaround for bug with gps ground track simvar
-        if (groundSpeed < 40) {
-            track = (0.025 * groundSpeed + 0.00005) * track + (1 - (0.025 * groundSpeed + 0.00005)) * heading;
-        }
-
         if (!geometry || geometry.legs.size < 1) {
             this.pseudoWaypoints.length = 0;
             return;
