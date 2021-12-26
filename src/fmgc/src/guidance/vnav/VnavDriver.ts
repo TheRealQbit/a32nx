@@ -139,6 +139,7 @@ export class VnavDriver implements GuidanceComponent {
 
         this.currentSelectedGeometryProfile = new SelectedGeometryProfile();
 
+        this.climbSpeedProfile.updateMaxSpeedConstraints([]);
         this.climbPathBuilder.computeClimbPath(this.currentSelectedGeometryProfile);
 
         this.currentSelectedGeometryProfile.finalizeProfile();
